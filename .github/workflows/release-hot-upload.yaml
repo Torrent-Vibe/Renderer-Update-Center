@@ -40,7 +40,8 @@ jobs:
         run: tar -czf renderer-dist.tar.gz -C layer/renderer dist
 
       - name: Encrypt package
-        run: node scripts/encrypt-update-package.js \
+        run: |
+          node scripts/encrypt-update-package.js \
           --input renderer-dist.tar.gz \
           --public-key resources/security/update_pubkey.pem \
           --private-key resources/security/update_privkey.pem \
