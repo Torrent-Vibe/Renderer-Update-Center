@@ -22,8 +22,8 @@ jobs:
         with:
           repository: 'innei/Torrent-Vibe-Private'
           fetch-depth: 1
-        env:
-          GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
+          token: ${{ secrets.REPO_TOKEN }}
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
       - name: Use Node.js
