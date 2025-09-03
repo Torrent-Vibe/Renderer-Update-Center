@@ -60,6 +60,7 @@ jobs:
           tag_name: v${{ inputs.version }}
           name: Release v${{ inputs.version }}
           generate_release_notes: false
+          repository: 'Torrent-Vibe/Renderer-Update-Center'
           fail_on_unmatched_files: false
           append_body: true
           body: ${{ inputs.changelog }}
