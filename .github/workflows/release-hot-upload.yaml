@@ -68,5 +68,3 @@ jobs:
           files: |
             renderer-dist-encrypted.bin
             renderer-dist-encrypted.sha256
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
