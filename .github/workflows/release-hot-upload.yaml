@@ -34,17 +34,33 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       - name: Build renderer
-        run: pnpm run build:production
+        run: pnpm run build:production:secure
+        env:
+          BASE_URL: '.'
 
       - name: Archive renderer dist
         run: tar -czf renderer-dist.tar.gz -C layer/renderer dist
 
-      - name: Encrypt package
+      - name: Prepare signing private key
+        env:
+          UPDATE_SIGNING_PRIV_PEM: ${{ secrets.UPDATE_SIGNING_PRIV_PEM }}
+        run: |
+          if [ -n "${UPDATE_SIGNING_PRIV_PEM}" ]; then
+            echo "Using signing private key from secret"
+            echo "$UPDATE_SIGNING_PRIV_PEM" > signing_private.pem
+          else
+            echo "WARNING: UPDATE_SIGNING_PRIV_PEM secret not set; falling back to legacy private key file"
+            cp resources/security/update_privkey.pem signing_private.pem
+          fi
+          # Basic sanity check
+          head -n 5 signing_private.pem || true
+
+      - name: Encrypt package (soft-encrypted + strong-signed)
         run: |
           node scripts/encrypt-update-package.js \
           --input renderer-dist.tar.gz \
           --public-key resources/security/update_pubkey.pem \
-          --private-key resources/security/update_privkey.pem \
+          --private-key signing_private.pem \
           --version ${{ inputs.version }} \
           --output renderer-dist-encrypted.bin
       - name: Generate SHA256
@@ -60,6 +76,7 @@ jobs:
           tag_name: v${{ inputs.version }}
           name: Release v${{ inputs.version }}
           generate_release_notes: false
+          repository: 'Torrent-Vibe/Renderer-Update-Center'
           fail_on_unmatched_files: false
           append_body: true
           body: ${{ inputs.changelog }}
