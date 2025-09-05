@@ -13,6 +13,11 @@ on:
         required: false
         type: string
 
+      required_main_hash:
+        description: 'Required main layer hash (package.json mainHash: sha256 of dist/main + dist/preload)'
+        required: false
+        type: string
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -60,6 +65,7 @@ jobs:
           --public-key resources/security/update_pubkey.pem \
           --private-key signing_private.pem \
           --version ${{ inputs.version }} \
+          ${{ inputs.required_main_hash && format('--required-main-hash {0}', inputs.required_main_hash) || '' }} \
           --output renderer-dist-encrypted.bin
       - name: Generate SHA256
         run: |
@@ -68,6 +74,18 @@ jobs:
           else
             sha256sum renderer-dist-encrypted.bin | awk '{print $1}' > renderer-dist-encrypted.sha256
           fi
+          echo "sha256=$(cat renderer-dist-encrypted.sha256)" >> $GITHUB_OUTPUT
+        id: sha
+      - name: Generate manifest.yaml
+        run: |
+          node scripts/generate-release-manifest.js \
+            --version ${{ inputs.version }} \
+            --asset-name renderer-dist-encrypted.bin \
+            --asset-path renderer-dist-encrypted.bin \
+            --asset-sha256 ${{ steps.sha.outputs.sha256 || '' }} \
+            ${{ inputs.required_main_hash && format('--required-main-hash {0}', inputs.required_main_hash) || '' }} \
+            --output manifest.yaml
+
       - name: Upload renderer artifact
         uses: softprops/action-gh-release@v2
         with:
@@ -82,3 +100,4 @@ jobs:
           files: |
             renderer-dist-encrypted.bin
             renderer-dist-encrypted.sha256
+            manifest.yaml
