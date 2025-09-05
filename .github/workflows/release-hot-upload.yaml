@@ -34,9 +34,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       - name: Build renderer
-        run: pnpm run build:production:secure
-        env:
-          BASE_URL: '.'
+        run: pnpm run build:render-release
 
       - name: Archive renderer dist
         run: tar -czf renderer-dist.tar.gz -C layer/renderer dist
